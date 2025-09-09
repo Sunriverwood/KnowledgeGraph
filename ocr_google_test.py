@@ -1,27 +1,28 @@
+# Import the necessary libraries
+import google.auth
 from google.cloud import vision
 
 
-def detect_text_gcs(bucket_name, file_name):
+def detect_text_gcs(project_id, bucket_name, file_name):
     """
-    Detects text in an image file located in Google Cloud Storage.
-    Cloud Shell and other Google Cloud environments provide automatic authentication.
+    Detects text in an image file located in Google Cloud Storage,
+    explicitly setting the quota project ID in the code.
     """
-    # 1. 认证方式修改：
-    # 在Cloud Shell中，客户端会自动使用环境的认证信息，无需指定密钥文件。
-    # 旧代码：client = vision.ImageAnnotatorClient.from_service_account_file(key_path)
-    client = vision.ImageAnnotatorClient()
+    # 1. Authenticate and explicitly set the quota project.
+    # This is the most reliable way to solve the "quota project" error without
+    # needing to set environment variables.
+    credentials, _ = google.auth.default(quota_project_id=project_id)
+    client = vision.ImageAnnotatorClient(credentials=credentials)
 
-    # 2. 图片读取方式修改：
-    # 我们不再从本地读取文件内容，而是直接告诉API图片的GCS URI。
+    # 2. Define the image location in Google Cloud Storage
     image_uri = f"gs://{bucket_name}/{file_name}"
+    print(f"Starting recognition for image at {image_uri}...")
 
-    print(f"开始识别位于 {image_uri} 的图片...")
-
-    # 使用 vision.ImageSource 指定图片的云端位置
     image = vision.Image()
     image.source.image_uri = image_uri
 
-    # 调用API进行识别（这部分逻辑不变）
+    # 3. Call the Vision API using the simpler document_text_detection method
+    # This avoids the previous TypeError.
     response = client.document_text_detection(image=image)
 
     if response.error.message:
@@ -30,23 +31,28 @@ def detect_text_gcs(bucket_name, file_name):
             'https://cloud.google.com/apis/design/errors'.format(
                 response.error.message))
 
-    print("完整的识别文本:")
+    print("--- Full Text Detected ---")
     print(response.full_text_annotation.text)
+    print("--------------------------")
+
+    with open(f"{file_name.rsplit('.', 1)[0]}.txt", "w", encoding="utf-8") as f:
+        f.write(response.full_text_annotation.text)
+    print(f"识别结果已保存为 {file_name.rsplit('.', 1)[0]}.txt")
 
 
-# --- 主程序 ---
+# --- Main Program ---
 if __name__ == '__main__':
-    # 3. 主程序变量修改：
-    # 您需要在这里填入您的GCS存储桶名称和图片文件名。
+    # (Required) Your Google Cloud project ID
+    project_id = "valid-octagon-471507-m6"
 
-    # (必填) 替换为您的 GCS 存储桶的名称
+    # (Required) The name of your GCS storage bucket
     bucket_name = "myocr-project-1"
 
-    # (必填) 您上传到存储桶的图片文件名
+    # (Required) The filename of the image you uploaded to the bucket
     file_name = "1.png"
 
-    # 检查用户是否已修改占位符
+    # Check if the user has updated the placeholder values
     if bucket_name == "your-bucket-name-here":
-        print("错误：请在代码中修改 bucket_name 变量为您的实际存储桶名称。")
+        print("Error: Please update the 'bucket_name' variable in the code with your actual bucket name.")
     else:
-        detect_text_gcs(bucket_name, file_name)
+        detect_text_gcs(project_id, bucket_name, file_name)
