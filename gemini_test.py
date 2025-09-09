@@ -38,7 +38,7 @@ def main():
     pdf_folder = "data"  # 指定PDF文件夹
     pdf_files = [f for f in os.listdir(pdf_folder) if f.lower().endswith(".pdf")]
     output_files = [os.path.splitext(f)[0] + ".txt" for f in pdf_files]
-    api_key = os.getenv("GEMINI_API_KEY", "AIzaSyBkkwGChpkAjz1hviqOekPy7k5dskt99Lo")  # 建议改成环境变量
+    api_key = os.getenv("GEMINI_API_KEY")
 
     # 初始化 Gemini
     genai.configure(api_key=api_key)
