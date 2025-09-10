@@ -1,5 +1,5 @@
 import os
-import google.generativeai as genai
+from google import genai
 from google.api_core import exceptions
 from datetime import datetime, timezone
 
@@ -31,7 +31,8 @@ def manage_uploaded_files(client):
 
         print(f"\n📄 找到了 {len(files)} 个已上传的文件：")
         for f in files:
-            print(f"  - 显示名称: {f.display_name:<40} 文件 ID: {f.name}")
+            display_name = f.display_name or "未知"
+            print(f"  - 显示名称: {display_name:<40} 文件 ID: {f.name}")
 
         print("\n" + "-" * 50)
         print("⚠️ 警告：此操作将永久删除以上所有文件！")
@@ -41,10 +42,11 @@ def manage_uploaded_files(client):
             print("\n🔥 正在删除文件，请稍候...")
             for f in files:
                 try:
+                    display_name = f.display_name or "未知"
                     client.files.delete(name=f.name)
-                    print(f"  - 已删除 {f.display_name} ({f.name})")
+                    print(f"  - 已删除 {display_name} ({f.name})")
                 except Exception as e:
-                    print(f"  - 🔥 删除 {f.display_name} 失败: {e}")
+                    print(f"  - 🔥 删除 {display_name} 失败: {e}")
             print("\n✅ 文件删除操作完成！")
         else:
             print("\n🚫 操作已取消。")
