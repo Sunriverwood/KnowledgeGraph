@@ -16,7 +16,7 @@ os.environ["https_proxy"] = "http://127.0.0.1:7890"
 # ================================
 def manage_uploaded_files(client):
     """
-    列出所有通过 File API 上传的文件，并提供全部删除的选项。
+    列出所有通过 File API 上传的文件，并允许选择性删除。
     """
     print("\n" + "=" * 50)
     print("📁 文件管理模块")
@@ -30,26 +30,39 @@ def manage_uploaded_files(client):
             return
 
         print(f"\n📄 找到了 {len(files)} 个已上传的文件：")
-        for f in files:
+        for idx, f in enumerate(files, 1):
             display_name = f.display_name or "未知"
-            print(f"  - 显示名称: {display_name:<40} 文件 ID: {f.name}")
+            print(f"  {idx}. 显示名称: {display_name:<40} 文件 ID: {f.name}")
 
         print("\n" + "-" * 50)
-        print("⚠️ 警告：此操作将永久删除以上所有文件！")
-        confirm = input("您确定要删除所有这些文件吗？请输入 'yes' 以确认: ").lower()
+        print("请输入要删除的文件序号（如 1,3,5），或输入 'all' 删除全部，或直接回车取消：")
+        user_input = input("您的选择: ").strip().lower()
 
-        if confirm == 'yes':
-            print("\n🔥 正在删除文件，请稍候...")
-            for f in files:
-                try:
-                    display_name = f.display_name or "未知"
-                    client.files.delete(name=f.name)
-                    print(f"  - 已删除 {display_name} ({f.name})")
-                except Exception as e:
-                    print(f"  - 🔥 删除 {display_name} 失败: {e}")
-            print("\n✅ 文件删除操作完成！")
-        else:
+        if not user_input:
             print("\n🚫 操作已取消。")
+            return
+        if user_input == 'all':
+            indices = list(range(1, len(files) + 1))
+        else:
+            try:
+                indices = [int(i) for i in user_input.split(',') if i.strip().isdigit() and 1 <= int(i) <= len(files)]
+            except Exception:
+                print("❌ 输入格式有误，操作取消。")
+                return
+            if not indices:
+                print("❌ 未选择任何有效文件，操作取消。")
+                return
+
+        print("\n🔥 正在删除所选文件，请稍候...")
+        for idx in indices:
+            f = files[idx - 1]
+            display_name = f.display_name or "未知"
+            try:
+                client.files.delete(name=f.name)
+                print(f"  - 已删除 {display_name} ({f.name})")
+            except Exception as e:
+                print(f"  - 🔥 删除 {display_name} 失败: {e}")
+        print("\n✅ 文件删除操作完成！")
 
     except Exception as e:
         print(f"🔥 获取或删除文件时发生错误: {e}")
