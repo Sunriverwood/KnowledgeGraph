@@ -16,7 +16,7 @@ os.environ["https_proxy"] = "http://127.0.0.1:7890"
 # ================================
 def manage_uploaded_files(client):
     """
-    列出所有通过 File API 上传的文件，并允许选择性删除。
+    列出所有通过 File API 上传的文件，并允许选择性删除，支持范围选择。
     """
     print("\n" + "=" * 50)
     print("📁 文件管理模块")
@@ -35,7 +35,7 @@ def manage_uploaded_files(client):
             print(f"  {idx}. 显示名称: {display_name:<40} 文件 ID: {f.name}")
 
         print("\n" + "-" * 50)
-        print("请输入要删除的文件序号（如 1,3,5），或输入 'all' 删除全部，或直接回车取消：")
+        print("请输入要删除的文件序号（如 1,3,5 或 2-4,7），或输入 'all' 删除全部，或直接回车取消：")
         user_input = input("您的选择: ").strip().lower()
 
         if not user_input:
@@ -44,14 +44,27 @@ def manage_uploaded_files(client):
         if user_input == 'all':
             indices = list(range(1, len(files) + 1))
         else:
+            indices = set()
             try:
-                indices = [int(i) for i in user_input.split(',') if i.strip().isdigit() and 1 <= int(i) <= len(files)]
+                for part in user_input.split(','):
+                    part = part.strip()
+                    if '-' in part:
+                        start, end = part.split('-', 1)
+                        if start.strip().isdigit() and end.strip().isdigit():
+                            s, e = int(start), int(end)
+                            if 1 <= s <= e <= len(files):
+                                indices.update(range(s, e + 1))
+                    elif part.isdigit():
+                        idx = int(part)
+                        if 1 <= idx <= len(files):
+                            indices.add(idx)
             except Exception:
                 print("❌ 输入格式有误，操作取消。")
                 return
             if not indices:
                 print("❌ 未选择任何有效文件，操作取消。")
                 return
+            indices = sorted(indices)
 
         print("\n🔥 正在删除所选文件，请稍候...")
         for idx in indices:
