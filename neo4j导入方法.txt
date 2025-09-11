@@ -1,0 +1,28 @@
+//单个json文件创建索引
+CALL apoc.load.json("file:///merged_knowledge_graph.json") YIELD value
+UNWIND value.nodes AS node_data
+WITH collect(DISTINCT node_data.label) AS unique_labels
+WITH apoc.map.fromPairs([label IN unique_labels | [label, ['id']]]) AS schemaMap
+CALL apoc.schema.assert(schemaMap, {}) YIELD label, key, unique
+RETURN label, key, unique;
+
+// 单个json文件导入节点
+CALL apoc.load.json("file:///merged_knowledge_graph.json") YIELD value
+UNWIND value.nodes AS node_data
+MERGE (n {id: node_data.id})
+SET n += node_data.properties
+WITH n, node_data
+CALL apoc.create.addLabels(n, [node_data.label]) YIELD node
+RETURN count(node) as nodes_created;
+
+// 单个json文件创建关系
+CALL apoc.load.json("file:///merged_knowledge_graph.json") YIELD value
+UNWIND value.relationships AS rel_data
+MATCH (source {id: rel_data.source})
+MATCH (target {id: rel_data.target})
+CALL apoc.create.relationship(source, rel_data.type, rel_data.properties, target) YIELD rel
+RETURN count(rel) as relationships_created;
+
+// 简单清空节点和关系
+MATCH (n)
+DETACH DELETE n
