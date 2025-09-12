@@ -11,7 +11,7 @@ from google.api_core import exceptions
 # 配置区
 # ================================
 # 每个小批次包含的PDF文件数量
-BATCH_SIZE = 10
+BATCH_SIZE = 20
 # 单个批次的最长轮询时间
 BATCH_POLLING_TIMEOUT_SECONDS = 8 * 60 * 60
 # 状态持久化文件
