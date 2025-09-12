@@ -24,11 +24,9 @@ UNRECOVERABLE_ERROR_MAP = {
     "Server disconnected without sending a response": "files_disconnected",
     "[WinError 10054]": "files_disconnected",
 
-    # 命名问题 -> files_wrong_name
-    "Request contains an invalid argument": "files_wrong_name",
-
     # 其他问题 -> files_other_questions
-    "The document has no pages": "files_other_questions"
+    "The document has no pages": "files_other_questions",
+    "Request contains an invalid argument": "files_other_questions"
 }
 
 # ================================

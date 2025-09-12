@@ -1,4 +1,5 @@
 批量处理，单个文件最大2G
+单个文件最大页数1000
 api在系统环境变量里设置
 记得用cloud_manager删除上传的文件
 启动neo4j，首先进入neo4j安装目录的bin目录，然后cmd运行./neo4j console，浏览器访问localhost:7474
