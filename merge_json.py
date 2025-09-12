@@ -28,6 +28,7 @@ def merge_and_flatten_knowledge_graph_json(source_directory, output_filename):
     merged_nodes = []
     merged_relationships = []
     processed_files_count = 0
+    filtered_rels_count = 0
 
     print(f"开始扫描目录: '{source_directory}'...")
 
@@ -47,9 +48,13 @@ def merge_and_flatten_knowledge_graph_json(source_directory, output_filename):
 
                     if 'relationships' in data and isinstance(data['relationships'], list):
                         for rel in data['relationships']:
+                            # 校验 type 字段，只有存在且不为 None 的关系才处理
+                            if not rel.get('type'):
+                                filtered_rels_count += 1
+                                continue
                             if 'properties' in rel and isinstance(rel['properties'], dict):
                                 rel['properties'] = flatten_properties(rel['properties'])
-                        merged_relationships.extend(data['relationships'])
+                            merged_relationships.append(rel)
 
                     print(f"  [+] 成功处理文件: {filename}")
                     processed_files_count += 1
@@ -74,6 +79,8 @@ def merge_and_flatten_knowledge_graph_json(source_directory, output_filename):
 
         print("\n合并并扁平化完成！")
         print(f"  - 总共处理了 {processed_files_count} 个 JSON 文件。")
+        if filtered_rels_count > 0:
+            print(f"  - 总共过滤了 {filtered_rels_count} 个无效关系。")
         print(f"  - 合并后的节点总数: {len(merged_nodes)}")
         print(f"  - 合并后的关系总数: {len(merged_relationships)}")
         print(f"  - 结果已保存至: '{output_filename}'")
